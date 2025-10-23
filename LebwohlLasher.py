@@ -111,7 +111,7 @@ def savedat(arr,nsteps,Ts,runtime,ratio,energy,order,nmax):
     """
     # Create filename based on current date and time.
     current_datetime = datetime.datetime.now().strftime("%a-%d-%b-%Y-at-%I-%M-%S%p")
-    filename = "LL-Output-{:s}.txt".format(current_datetime)
+    filename = "DATA/LL-Output-{:s}.txt".format(current_datetime)
     FileOut = open(filename,"w")
     # Write a header with run parameters
     print("#=====================================================",file=FileOut)
@@ -273,7 +273,7 @@ def main(program, nsteps, nmax, temp, pflag):
     plotdat(lattice,pflag,nmax)
     # Create arrays to store energy, acceptance ratio and order parameter
     energy = np.zeros(nsteps+1, dtype=float)
-    ratio = np.zeros(nsteps+1, dtype=float)  # initially dtype-np.dtype wouldn't run
+    ratio = np.zeros(nsteps+1, dtype=float)  # initially dtype=np.dtype wouldn't run
     order = np.zeros(nsteps+1, dtype=float)
     # Set initial values in arrays
     energy[0] = all_energy(lattice,nmax)
