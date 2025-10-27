@@ -21,10 +21,14 @@ domains alternate between old data and new data.
 
 SH 16-Oct-23
 """
+
+
+
 import sys
 import time
 import datetime
 import numpy as np
+
 
 # Only import matplotlib when needed; eg. if plotting is requested (saves start-up time)
 def _lazy_import_matplotlib():
@@ -49,17 +53,18 @@ def total_energy(arr):
     return np.sum(en)
 
 def get_order(arr):
-    """Vectorised order parameter"""
+    """Vectorised nematic (ie unordered) order parameter (correct normalisation, see sect 5)."""
     nmax = arr.shape[0]
+    # local directors (3 × n × n)
     lab = np.stack((np.cos(arr), np.sin(arr), np.zeros_like(arr)), axis=0)
-    # Contract over lattice indices i,j
+    # 3 * sum_{i,j} l_a l_b
     Q = 3.0 * np.einsum('aij,bij->ab', lab, lab)
-    # Subtract trace(δ_ab) = 3 → same as 3*I
-    Q -= 3.0 * np.eye(3)
+    # subtract δ_ab once per site → N^2 * I
+    Q -= (nmax * nmax) * np.eye(3)
+    # divide by 2 N^2
     Q /= (2.0 * nmax * nmax)
-    # Symmetric by construction; eigvalsh is stable & fast
-    evals = np.linalg.eigvalsh(Q)
-    return evals.max()
+    # largest eigenvalue = S
+    return float(np.linalg.eigvalsh(Q).max())
 
 def plotdat(arr, pflag, nmax):
     if pflag == 0:
@@ -220,3 +225,5 @@ if __name__ == '__main__':
         main(PROGNAME, ITERATIONS, SIZE, TEMPERATURE, PLOTFLAG)
     else:
         print(f"Usage: python {sys.argv[0]} <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>")
+
+        #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

@@ -18,10 +18,11 @@ def _lazy_import_matplotlib():
     return plt, mpl
 
 # ============================================================
-#  NumPy vectorised helpers (same as before)
+#  NumPy vectorised helpers
 # ============================================================
 def initdat(nmax):
-    return np.random.random_sample((nmax, nmax)) * 2.0 * np.pi
+    # float64 by default; JIT operates fastest on C-contiguous arrays
+    return np.random.random_sample((nmax, nmax)).astype(np.float64) * 2.0 * np.pi
 
 def total_energy(arr):
     """Vectorised total energy with periodic boundaries."""
@@ -33,17 +34,17 @@ def total_energy(arr):
                 (1 - 3 * np.cos(ang_xm)**2) +
                 (1 - 3 * np.cos(ang_yp)**2) +
                 (1 - 3 * np.cos(ang_ym)**2))
-    return np.sum(en)
+    return float(np.sum(en))
 
 def get_order(arr):
-    """Vectorised order"""
+    """Vectorised nematic order parameter (correct normalisation: subtract N^2 * I, then / (2 N^2))."""
     nmax = arr.shape[0]
-    lab = np.stack((np.cos(arr), np.sin(arr), np.zeros_like(arr)), axis=0)
-    Q = 3.0 * np.einsum('aij,bij->ab', lab, lab)
-    Q -= 3.0 * np.eye(3)
-    Q /= (2.0 * nmax * nmax)
+    lab = np.stack((np.cos(arr), np.sin(arr), np.zeros_like(arr)), axis=0)  # shape: (3, n, n)
+    Q = 3.0 * np.einsum('aij,bij->ab', lab, lab)          # 3 * Σ l_a l_b over lattice
+    Q -= (nmax * nmax) * np.eye(3)                        # subtract δ_ab once per site -> N^2 * I
+    Q /= (2.0 * nmax * nmax)                              # divide by 2 N^2
     evals = np.linalg.eigvalsh(Q)
-    return evals.max()
+    return float(evals.max())
 
 def plotdat(arr, pflag, nmax):
     if pflag == 0:
@@ -95,7 +96,6 @@ def savedat(arr, nsteps, Ts, runtime, ratio, energy, order, nmax):
 # ============================================================
 #   JIT + PARALLEL SECTION
 # ============================================================
-
 @njit(fastmath=True, inline='always')
 def _local_delta_energy(arr, ix, iy, dtheta, nmax):
     """Compute ΔE for a proposed rotation at (ix, iy) with periodic BCs."""
@@ -109,29 +109,24 @@ def _local_delta_energy(arr, ix, iy, dtheta, nmax):
 
     en = 0.0
 
-    # I had a go at vectorising this sequence a little further, but to no avail
     # neighbour (ix+1, iy)
     nb = arr[ixp, iy]
-    d0 = t0 - nb
-    d1 = t1 - nb
+    d0 = t0 - nb; d1 = t1 - nb
     en += 0.5 * ((1.0 - 3.0 * np.cos(d1)**2) - (1.0 - 3.0 * np.cos(d0)**2))
 
     # neighbour (ix-1, iy)
     nb = arr[ixm, iy]
-    d0 = t0 - nb
-    d1 = t1 - nb
+    d0 = t0 - nb; d1 = t1 - nb
     en += 0.5 * ((1.0 - 3.0 * np.cos(d1)**2) - (1.0 - 3.0 * np.cos(d0)**2))
 
     # neighbour (ix, iy+1)
     nb = arr[ix, iyp]
-    d0 = t0 - nb
-    d1 = t1 - nb
+    d0 = t0 - nb; d1 = t1 - nb
     en += 0.5 * ((1.0 - 3.0 * np.cos(d1)**2) - (1.0 - 3.0 * np.cos(d0)**2))
 
     # neighbour (ix, iy-1)
     nb = arr[ix, iym]
-    d0 = t0 - nb
-    d1 = t1 - nb
+    d0 = t0 - nb; d1 = t1 - nb
     en += 0.5 * ((1.0 - 3.0 * np.cos(d1)**2) - (1.0 - 3.0 * np.cos(d0)**2))
 
     return en
@@ -139,18 +134,18 @@ def _local_delta_energy(arr, ix, iy, dtheta, nmax):
 @njit(parallel=True, fastmath=True)
 def MC_step_checkerboard_parallel(arr, Ts):
     """
-    Checkerboard-parallelised sweep.
-    Thread-safe using per-thread accumulators.
+    Checkerboard-parallelised Metropolis sweep.
+    Red sites: (i + j) even. Black sites: (i + j) odd.
+    Thread-safe via per-row accumulators.
     """
     nmax = arr.shape[0]
     scale = 0.1 + Ts
     thread_acc = np.zeros(nmax, dtype=np.int64)  # per-row accumulator
 
-    # RED AND BLACK SITES DEFINED BY i+j PARITY --------- (I saw the red/black convention somewhere years ago)
     # --- Red sites (i+j even) ---
     dtheta_r = np.random.normal(0.0, scale, (nmax, nmax))
     urand_r  = np.random.random((nmax, nmax))
-    for i in prange(nmax):  # parallel outer loop
+    for i in prange(nmax):
         local_acc = 0
         j_start = 0 if (i % 2 == 0) else 1
         for j in range(j_start, nmax, 2):
@@ -159,13 +154,13 @@ def MC_step_checkerboard_parallel(arr, Ts):
             if dE <= 0.0 or np.exp(-dE / Ts) >= urand_r[i, j]:
                 arr[i, j] += dth
                 local_acc += 1
-        thread_acc[i] = local_acc  # each thread writes to its own index
-    acc_r = np.sum(thread_acc)     # safe reduction after parallel section
+        thread_acc[i] = local_acc
+    acc_r = np.sum(thread_acc)
 
     # --- Black sites (i+j odd) ---
     dtheta_b = np.random.normal(0.0, scale, (nmax, nmax))
     urand_b  = np.random.random((nmax, nmax))
-    thread_acc.fill(0)  # reuse
+    thread_acc.fill(0)
     for i in prange(nmax):
         local_acc = 0
         j_start = 1 if (i % 2 == 0) else 0
@@ -183,29 +178,29 @@ def MC_step_checkerboard_parallel(arr, Ts):
 # ============================================================
 #   Main driver
 # ============================================================
-
 def main(program, nsteps, nmax, temp, pflag):
-    set_num_threads(10)  # use all 12 threads for shortest runtime
+    set_num_threads(10)  # use 10 threads (match your machine)
     print(f"[Numba] using {get_num_threads()} threads")
 
-    lattice = initdat(nmax)
+    # Ensure C-contiguous for JIT kernels
+    lattice = np.ascontiguousarray(initdat(nmax))
     plotdat(lattice, pflag, nmax)
 
-    energy = np.zeros(nsteps + 1)
-    ratio  = np.zeros(nsteps + 1)
-    order  = np.zeros(nsteps + 1)
+    energy = np.zeros(nsteps + 1, dtype=np.float64)
+    ratio  = np.zeros(nsteps + 1, dtype=np.float64)
+    order  = np.zeros(nsteps + 1, dtype=np.float64)
 
     energy[0] = total_energy(lattice)
     ratio[0]  = 0.5
     order[0]  = get_order(lattice)
 
-    # Compilation and compilation timing (including this in the full timing would look bad!)
+    # Compile once (excluded from runtime)
     t_compile_start = time.time()
     MC_step_checkerboard_parallel(lattice, temp)
     t_compile = time.time() - t_compile_start
     print(f"Compilation complete in {t_compile:.3f} s")
 
-    # Actual simulation timing
+    # Simulation timing
     t0 = time.time()
     for it in range(1, nsteps + 1):
         ratio[it]  = MC_step_checkerboard_parallel(lattice, temp)

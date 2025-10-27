@@ -1,17 +1,25 @@
 """
-Vectorised Python Lebwohl–Lasher code (2D version)
-Based on: P.A. Lebwohl & G. Lasher, Phys. Rev. A, 6, 426–429 (1972)
+VECTORISED Python Lebwohl-Lasher code.  Based on the paper 
+P.A. Lebwohl and G. Lasher, Phys. Rev. A, 6, 426-429 (1972).
+This version in 2D.
 
-Usage:
-  python LebwohlLasher.py <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>
+Run at the command line by typing:
 
-  ITERATIONS  = number of Monte Carlo steps (MCS)
-  SIZE        = side length of square lattice
-  TEMPERATURE = reduced temperature (0.0–2.0)
-  PLOTFLAG    = 0 for none, 1 for energy plot, 2 for angle plot
+python LebwohlLasher.py <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>
 
-Vectorised for performance by eliminating Python loops.
-SH (2023), Modified (2025)
+where:
+  ITERATIONS = number of Monte Carlo steps, where 1MCS is when each cell
+      has attempted a change once on average (i.e. SIZE*SIZE attempts)
+  SIZE = side length of square lattice
+  TEMPERATURE = reduced temperature in range 0.0 - 2.0.
+  PLOTFLAG = 0 for no plot, 1 for energy plot and 2 for angle plot.
+  
+The initial configuration is set at random. The boundaries
+are periodic throughout the simulation.  During the
+time-stepping, an array containing two domains is used; these
+domains alternate between old data and new data.
+
+SH 16-Oct-23
 """
 
 import sys
@@ -45,14 +53,26 @@ def total_energy(arr):
 
 # ======================================================================
 def get_order(arr):
-    """Vectorised computation of the nematic order parameter."""
+    """Vectorised computation of the nematic order parameter (corrected normalisation)."""
     nmax = arr.shape[0]
+
+    # Construct local orientation vectors (3 × n × n)
     lab = np.stack((np.cos(arr), np.sin(arr), np.zeros_like(arr)), axis=0)
-    delta = np.eye(3)
-    # Tensor contraction replaces 4 nested loops
-    Qab = (3 * np.einsum('aij,bij->ab', lab, lab) - delta.sum() * np.eye(3)) / (2 * nmax**2)
+
+    # Perform tensor contraction over all lattice sites
+    # Equivalent to: Σ_ij [3 l_a l_b - δ_ab]
+    Qab = 3.0 * np.einsum('aij,bij->ab', lab, lab)
+
+    # Subtract δ_ab once per site → N^2 * I
+    Qab -= (nmax * nmax) * np.eye(3)
+
+    # Divide by 2N^2 (as per original Lebwohl–Lasher definition)
+    Qab /= (2.0 * nmax * nmax)
+
+    # Largest eigenvalue is the scalar order parameter
     eigenvalues = np.linalg.eigvalsh(Qab)
-    return eigenvalues.max()
+    return float(eigenvalues.max())
+
 
 
 # ======================================================================
