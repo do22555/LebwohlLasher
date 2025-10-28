@@ -4,12 +4,10 @@ import re
 
 # File paths
 files = {
-    "Simple Python": "LL-Output-Thu-23-Oct-2025-at-12-17-40PM.txt",
-    "Vectorised": "LL-Output-Mon-27-Oct-2025-at-04-31-50PM.txt",
-    "Series Numba": "LL-Output-Mon-27-Oct-2025-at-12-11-45PM.txt",
-    "Parallel Numba": "LL-Output-Mon-27-Oct-2025-at-01-15-16PM.txt"
-    
-
+    "Simple Python": "LL-Output-Mon-27-Oct-2025-at-04-42-28PM.txt",
+    "Vectorised": "LL-Output-Mon-27-Oct-2025-at-04-42-39PM.txt",
+    "Series Numba": "LL-Output-Mon-27-Oct-2025-at-04-42-49PM.txt",
+    "Parallel Numba": "LL-Output-Mon-27-Oct-2025-at-04-43-05PM.txt"
 }
 
 # Function to load file and extract relevant columns

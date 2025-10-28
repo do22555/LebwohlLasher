@@ -53,7 +53,7 @@ def total_energy(arr):
 
 # ======================================================================
 def get_order(arr):
-    """Vectorised computation of the nematic order parameter (corrected normalisation)."""
+    """Vectorised computation of the nematic (unordered) order parameter (corrected normalisation, see sect 5)."""
     nmax = arr.shape[0]
 
     # Construct local orientation vectors (3 × n × n)

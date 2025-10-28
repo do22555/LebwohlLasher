@@ -226,4 +226,4 @@ if __name__ == '__main__':
     else:
         print(f"Usage: python {sys.argv[0]} <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>")
 
-        #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
+        #

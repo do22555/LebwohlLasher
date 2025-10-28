@@ -134,10 +134,14 @@ def _local_delta_energy(arr, ix, iy, dtheta, nmax):
 @njit(parallel=True, fastmath=True)
 def MC_step_checkerboard_parallel(arr, Ts):
     """
-    Checkerboard-parallelised Metropolis sweep.
+    Chequerboard-parallelised Metropolis sweep.
     Red sites: (i + j) even. Black sites: (i + j) odd.
-    Thread-safe via per-row accumulators.
+    Thread-safe via per-row accumulators. 
     """
+
+    # I've used the incorrect / yank spelling of chequerboard because I figured there would be a np func
+    # for this and I wanted to be consistent. Alas, there isn't. So this is done manually.
+
     nmax = arr.shape[0]
     scale = 0.1 + Ts
     thread_acc = np.zeros(nmax, dtype=np.int64)  # per-row accumulator
@@ -215,7 +219,7 @@ def main(program, nsteps, nmax, temp, pflag):
     plotdat(lattice, pflag, nmax)
 
 # ============================================================
-#   CLI
+#   Command Line Interface
 # ============================================================
 if __name__ == '__main__':
     if len(sys.argv) == 5:
