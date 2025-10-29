@@ -1,31 +1,26 @@
 """
 Slim Python wrapper/driver that calls the Cython kernels.
-Matches your original CLI, plotting and file output.
 """
-
+import os
+os.environ["OMP_NUM_THREADS"] = "12"
 import sys
 import time
 import datetime
 import numpy as np
 
-# --- Lazy matplotlib import ---
-def _lazy_import_matplotlib():
-    import matplotlib.pyplot as plt
-    import matplotlib as mpl
-    return plt, mpl
-
-# --- Import Cython kernels ---
 from LebwohlLasher_cy_kernel import (
     mc_step_checkerboard as cy_mc_step,
     total_energy as cy_total_energy,
     get_order as cy_get_order,
 )
 
-# =========================
-#  NumPy helpers (unchanged)
-# =========================
+def _lazy_import_matplotlib():
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    return plt, mpl
+
 def initdat(nmax):
-    return np.random.random_sample((nmax, nmax)).astype(np.float64) * 2.0 * np.pi
+    return (np.random.random_sample((nmax, nmax)).astype(np.float64) * 2.0 * np.pi)
 
 def plotdat(arr, pflag, nmax):
     if pflag == 0:
@@ -60,6 +55,8 @@ def plotdat(arr, pflag, nmax):
 
 def savedat(arr, nsteps, Ts, runtime, ratio, energy, order, nmax):
     current_datetime = datetime.datetime.now().strftime("%a-%d-%b-%Y-at-%I-%M-%S%p")
+    import os
+    os.makedirs("DATA", exist_ok=True)
     filename = f"DATA/LL-Output-{current_datetime}.txt"
     with open(filename, "w") as f:
         print("#=====================================================", file=f)
@@ -74,9 +71,6 @@ def savedat(arr, nsteps, Ts, runtime, ratio, energy, order, nmax):
         for i in range(nsteps + 1):
             print(f"   {i:05d}    {ratio[i]:6.4f} {energy[i]:12.4f}  {order[i]:6.4f}", file=f)
 
-# =========================
-#   Main driver
-# =========================
 def main(program, nsteps, nmax, temp, pflag):
     lattice = np.ascontiguousarray(initdat(nmax))
     plotdat(lattice, pflag, nmax)
@@ -85,12 +79,10 @@ def main(program, nsteps, nmax, temp, pflag):
     ratio  = np.zeros(nsteps + 1, dtype=np.float64)
     order  = np.zeros(nsteps + 1, dtype=np.float64)
 
-    # Initial diagnostics
     energy[0] = cy_total_energy(lattice)
     ratio[0]  = 0.5
     order[0]  = cy_get_order(lattice)
 
-    # One warm-up call to ensure Cython functions are loaded
     _ = cy_mc_step(lattice, temp)
 
     t0 = time.time()
