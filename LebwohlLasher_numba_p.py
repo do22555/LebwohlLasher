@@ -183,7 +183,7 @@ def MC_step_checkerboard_parallel(arr, Ts):
 #   Main driver
 # ============================================================
 def main(program, nsteps, nmax, temp, pflag):
-    set_num_threads(10)  # use 10 threads (match your machine)
+    set_num_threads(4)  # use 4 threads by default. MATCH MACHINE.
     print(f"[Numba] using {get_num_threads()} threads")
 
     # Ensure C-contiguous for JIT kernels
