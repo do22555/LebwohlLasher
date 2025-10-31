@@ -1,6 +1,4 @@
-"""
-Slim Python wrapper/driver that calls the Cython kernels.
-"""
+
 import os
 os.environ["OMP_NUM_THREADS"] = "12"
 import sys
