@@ -3,15 +3,14 @@
 Lebwohl–Lasher (2D) with MPI domain decomposition by columns.
 
 Run:
-    mpiexec -n <PROCS> python LebwohlLasher_mpi.py <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>
+    mpiexec -n <PROCESSES> python LebwohlLasher_mpi.py <ITERATIONS> <SIZE> <TEMPERATURE> <PLOTFLAG>
 
 This preserves the physics of the serial code:
-- Global red–black (chequerboard) Metropolis updates.
+- Global red–black (chequerboard) updates.
 - Halo exchanges between ranks after each colour sweep.
 - Periodic boundaries in both directions.
 - Global reductions for energy, order, and acceptance ratio.
 
-Author: you + MPI refactor
 """
 
 import sys
@@ -19,6 +18,8 @@ import time
 import datetime
 import numpy as np
 from mpi4py import MPI
+from mpi4py import MPI
+from LebwohlLasher_mpi_kernel import mc_step_local
 
 # ---------- Optional plotting (rank 0 only, lazy import) ----------
 def _lazy_import_matplotlib():

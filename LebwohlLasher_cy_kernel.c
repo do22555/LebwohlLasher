@@ -20490,7 +20490,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_23LebwohlLasher_cy_kernel_mc_step_checkerboard, "mc_step_checkerboard(double[:, ::1] arr, double Ts) -> double\n\nOpenMP chequerboard Metropolis sweep (periodic BCs).\nRed/black updates touch disjoint sites \342\207\222 safe to update arr in parallel.\nReductions are auto-inferred (no 'reduction=' kwarg in Cython 3.1).");
+PyDoc_STRVAR(__pyx_doc_23LebwohlLasher_cy_kernel_mc_step_checkerboard, "mc_step_checkerboard(double[:, ::1] arr, double Ts) -> double\n\nOpenMP chequerboard sweep (periodic BCs).\nRed/black updates touch disjoint sites \342\207\222 safe to update arr in parallel.\nReductions are auto-inferred (no 'reduction=' kwarg in Cython 3.1).");
 static PyMethodDef __pyx_mdef_23LebwohlLasher_cy_kernel_1mc_step_checkerboard = {"mc_step_checkerboard", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_23LebwohlLasher_cy_kernel_1mc_step_checkerboard, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_23LebwohlLasher_cy_kernel_mc_step_checkerboard};
 static PyObject *__pyx_pw_23LebwohlLasher_cy_kernel_1mc_step_checkerboard(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL

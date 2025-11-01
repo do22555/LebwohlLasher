@@ -6,6 +6,7 @@ import time
 import datetime
 import numpy as np
 
+### This whole thing is just a wrapper. Logic is the same as prev scripts.
 from LebwohlLasher_cy_kernel import (
     mc_step_checkerboard as cy_mc_step,
     total_energy as cy_total_energy,

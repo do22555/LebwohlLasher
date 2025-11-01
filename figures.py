@@ -39,26 +39,54 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# Data extracted from the image
-implementations = ["Raw", "Vectorised", "Numba", "Threaded Numba", "Cython", "MPI"]
-runtime_50 = [2.999688, 0.99825, 2.609752, 2.024596, 0.038707, 0.7]
-runtime_512 = [3010.9, 1079.5, 140, 20.231, 13.461785, 2000]
+# Load and clean
+path = 'DATA/Runtimes.csv'
+df = pd.read_csv(path)
 
-# Convert to numpy arrays for log plotting
-runtime_50 = np.array(runtime_50)
-runtime_512 = np.array(runtime_512)
-mc_steps = [50, 512]
+# Build two clean tables
+df_L = df.iloc[0:6].copy()
+df_N = df.iloc[8:14].copy()
 
-plt.figure(figsize=(10, 6))
+# Ensure numeric
+for sub in (df_L, df_N):
+    for col in ['L=50', 'L=100', 'L=256', 'L=512']:
+        sub[col] = pd.to_numeric(sub[col], errors='coerce')
 
-# Plot each implementation
-for i, label in enumerate(implementations):
-    plt.plot(mc_steps, [runtime_50[i], runtime_512[i]], marker='o', label=label)
+# Set index
+df_L = df_L.set_index('Script Name')
+df_N = df_N.set_index('Script Name')
 
-# Log scale
+#display_dataframe_to_user("Runtime vs L (numbers used)", df_L.reset_index())
+#isplay_dataframe_to_user("Runtime vs N (numbers used)", df_N.reset_index())
+
+# Sanity check: print Simple Python and Cython rows used for L plot
+print("L-scaling — Simple Python:", df_L.loc['Simple Python', ['L=50','L=100','L=256','L=512']].to_list())
+print("L-scaling — Cython (2 Th.):", df_L.loc['Cython (2 Th.)', ['L=50','L=100','L=256','L=512']].to_list())
+
+# Plot 1: Runtime vs L (N fixed)
+L_vals = [50, 100, 256, 512]
+plt.figure(figsize=(10,6))
+for script in df_L.index:
+    y = df_L.loc[script, ['L=50','L=100','L=256','L=512']].values.astype(float)
+    plt.plot(L_vals, y, marker='o', label=script)
 plt.yscale('log')
-plt.xlabel("Scale (N and L)")
-plt.ylabel("Runtime (s)")
-plt.grid(True, which="both", ls="--", lw=0.5)
+plt.xlabel('L')
+plt.ylabel('Runtime (s)')
+#plt.title('Runtime vs L (N fixed)')
+plt.grid(True, which='both')
+plt.legend()
+plt.show()
+
+# Plot 2: Runtime vs N (L fixed)
+N_vals = [50, 100, 256, 512]
+plt.figure(figsize=(10,6))
+for script in df_N.index:
+    y = df_N.loc[script, ['L=50','L=100','L=256','L=512']].values.astype(float)
+    plt.plot(N_vals, y, marker='o', label=script)
+plt.yscale('log')
+plt.xlabel('N')
+plt.ylabel('Runtime (s)')
+#plt.title('Runtime vs N (L fixed)')
+plt.grid(True, which='both')
 plt.legend()
 plt.show()

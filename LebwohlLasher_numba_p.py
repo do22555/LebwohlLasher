@@ -134,7 +134,7 @@ def _local_delta_energy(arr, ix, iy, dtheta, nmax):
 @njit(parallel=True, fastmath=True)
 def MC_step_checkerboard_parallel(arr, Ts):
     """
-    Chequerboard-parallelised Metropolis sweep.
+    Chequerboard-parallelised sweep.
     Red sites: (i + j) even. Black sites: (i + j) odd.
     Thread-safe via per-row accumulators. 
     """

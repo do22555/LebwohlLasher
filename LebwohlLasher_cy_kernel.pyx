@@ -2,6 +2,8 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, nonecheck=False, infer_types=True, initializedcheck=False
 # cython: embedsignature=True
 
+# GPT recommended these headers 
+
 from cython cimport boundscheck, wraparound, cdivision
 cimport cython
 import numpy as np
@@ -55,7 +57,7 @@ cdef double _local_delta_energy(double[:, ::1] arr,
 @cython.wraparound(False)
 cpdef double mc_step_checkerboard(double[:, ::1] arr, double Ts):
     """
-    OpenMP chequerboard Metropolis sweep (periodic BCs).
+    OpenMP chequerboard sweep (periodic BCs).
     Red/black updates touch disjoint sites ⇒ safe to update arr in parallel.
     Reductions are auto-inferred (no 'reduction=' kwarg in Cython 3.1).
     """

@@ -32,7 +32,7 @@ import matplotlib as mpl
 
 # ======================================================================
 def initdat(nmax):
-    """Initialise lattice with random orientations in [0, 2π]."""
+    """Initialise lattice with random orientations in [0, 2pi]."""
     return np.random.random_sample((nmax, nmax)) * 2.0 * np.pi
 
 
@@ -56,7 +56,7 @@ def get_order(arr):
     """Vectorised computation of the nematic (unordered) order parameter (corrected normalisation, see sect 5)."""
     nmax = arr.shape[0]
 
-    # Construct local orientation vectors (3 × n × n)
+    # Construct local orientation vectors (3 * n * n)
     lab = np.stack((np.cos(arr), np.sin(arr), np.zeros_like(arr)), axis=0)
 
     # Perform tensor contraction over all lattice sites
